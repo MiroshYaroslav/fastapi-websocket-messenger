@@ -1,0 +1,11 @@
+.idea
+
+frontend/.idea
+frontend/node_modules/
+frontend/dist
+frontend/.vscode
+
+backend/.idea
+backend/.env
+backend/venv
+backend__pycache__
