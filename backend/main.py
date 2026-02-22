@@ -1,4 +1,6 @@
+import asyncio
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,7 +11,13 @@ from routers import auth, users, posts, connection_manager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    listener_task = asyncio.create_task(connection_manager.manager.listen_to_redis())
     yield
+
+    listener_task.cancel()
+    await connection_manager.manager.pubsub.close()
+    await connection_manager.manager.redis_client.close()
 
 app = FastAPI(lifespan=lifespan)
 
