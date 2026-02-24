@@ -41,6 +41,10 @@ onMounted(async () => {
     connectGlobalWebSocket()
   } catch (e) {
     console.error(e)
+
+    if (e.response && e.response.status === 401) {
+      emit('logout')
+    }
   }
 })
 
