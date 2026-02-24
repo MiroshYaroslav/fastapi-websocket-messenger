@@ -1,5 +1,4 @@
 import json
-import os
 import redis.asyncio as redis
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
