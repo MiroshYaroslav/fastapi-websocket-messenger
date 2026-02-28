@@ -12,23 +12,6 @@ class UserResponse(BaseUser):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
-class BasePost(BaseModel):
-    title: str
-    comment: str
-    author_id: int
-
-class PostResponse(BasePost):
-    id: int
-    author: UserResponse
-
-    model_config = ConfigDict(from_attributes=True)
-
-class CreatePost(BasePost):
-    pass
-
 class Token(BaseModel):
     access_token: str
     token_type: str
-
-
-
