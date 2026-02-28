@@ -4,21 +4,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from database import engine, Base
-from routers import auth, users, posts, connection_manager
+from routers import auth, users, chat
+from services.websockets import manager
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    listener_task = asyncio.create_task(connection_manager.manager.listen_to_redis())
+    listener_task = asyncio.create_task(manager.listen_to_redis())
     yield
-
     listener_task.cancel()
-    await connection_manager.manager.pubsub.close()
-    await connection_manager.manager.redis_client.close()
-
+    await manager.pubsub.close()
+    await manager.redis_client.close()
 app = FastAPI(lifespan=lifespan)
 
 origins = [
@@ -40,9 +36,4 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(posts.router)
-app.include_router(connection_manager.router)
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+app.include_router(chat.router)
