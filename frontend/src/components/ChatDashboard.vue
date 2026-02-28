@@ -6,6 +6,8 @@ const currentUser = ref(null)
 const users = ref([])
 const selectedUser = ref(null)
 const messages = ref([])
+const isLoadingHistory = ref(false)
+const hasMoreHistory = ref(true)
 const messageInput = ref("")
 const socket = ref(null)
 const globalSocket = ref(null)
@@ -16,6 +18,9 @@ const onlineUsers = ref({})
 
 const emit = defineEmits(['logout'])
 
+let reconnectGlobalTimeout = null;
+let reconnectChatTimeout = null;
+
 onMounted(async () => {
   try {
     const meRes = await api.get('/users/me')
@@ -24,9 +29,15 @@ onMounted(async () => {
     const allRes = await api.get('/users/all')
     users.value = allRes.data.filter(u => u.id !== currentUser.value.id)
 
-    users.value.forEach(u => {
-      unreadCounts.value[u.id] = 0
-    })
+    try {
+      const unreadRes = await api.get('/ws/unread')
+      users.value.forEach(u => {
+        unreadCounts.value[u.id] = unreadRes.data[u.id] || 0
+      })
+    } catch (unreadErr) {
+      console.warn("Не вдалося завантажити лічильники", unreadErr)
+      users.value.forEach(u => { unreadCounts.value[u.id] = 0 })
+    }
 
     try {
       const onlineRes = await api.get('/ws/online-users')
@@ -41,7 +52,6 @@ onMounted(async () => {
     connectGlobalWebSocket()
   } catch (e) {
     console.error(e)
-
     if (e.response && e.response.status === 401) {
       emit('logout')
     }
@@ -49,16 +59,34 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  if (socket.value) socket.value.close()
-  if (globalSocket.value) globalSocket.value.close()
+  clearTimeout(reconnectGlobalTimeout)
+  clearTimeout(reconnectChatTimeout)
+
+  if (socket.value) {
+    socket.value.onclose = null
+    socket.value.close()
+  }
+  if (globalSocket.value) {
+    globalSocket.value.onclose = null
+    globalSocket.value.close()
+  }
 })
 
-const selectUser = (user) => {
+const selectUser = async (user) => {
   if (selectedUser.value?.id === user.id) return
 
   selectedUser.value = user
   messages.value = []
+
   unreadCounts.value[user.id] = 0
+
+  try {
+    await api.post(`/ws/mark-read/${user.id}`)
+  } catch (e) {
+    console.error("Помилка при оновленні статусу прочитання", e)
+  }
+
+  hasMoreHistory.value = true
   connectWebSocket()
 }
 
@@ -89,10 +117,23 @@ const connectGlobalWebSocket = () => {
       onlineUsers.value[data.user_id] = data.is_online
     }
   }
+
+  globalSocket.value.onclose = (e) => {
+    console.warn("Глобальний сокет закрито. Спроба відновлення через 3 сек...")
+    clearTimeout(reconnectGlobalTimeout)
+    reconnectGlobalTimeout = setTimeout(() => {
+      if (currentUser.value) {
+        connectGlobalWebSocket()
+      }
+    }, 3000)
+  }
 }
 
 const connectWebSocket = () => {
-  if (socket.value) socket.value.close()
+  if (socket.value) {
+    socket.value.onclose = null
+    socket.value.close()
+  }
 
   const roomId = getRoomId(currentUser.value.id, selectedUser.value.id)
   const wsUrl = `${getWsBaseUrl()}/ws/chat/${roomId}/${currentUser.value.id}/${selectedUser.value.id}?username=${currentUser.value.name}`
@@ -104,7 +145,54 @@ const connectWebSocket = () => {
     messages.value.push(data)
     scrollToBottom()
   }
+
+  socket.value.onclose = (e) => {
+    console.warn("Сокет чату закрито. Спроба відновлення через 3 сек...")
+    clearTimeout(reconnectChatTimeout)
+    reconnectChatTimeout = setTimeout(() => {
+      if (selectedUser.value) {
+        connectWebSocket()
+      }
+    }, 3000)
+  }
 }
+
+const handleScroll = async () => {
+  if (!messagesContainer.value) return;
+
+  if (messagesContainer.value.scrollTop === 0 && !isLoadingHistory.value && hasMoreHistory.value) {
+    await loadOlderMessages();
+  }
+};
+
+const loadOlderMessages = async () => {
+  isLoadingHistory.value = true;
+  const roomId = getRoomId(currentUser.value.id, selectedUser.value.id);
+  const currentOffset = messages.value.length;
+
+  try {
+    const oldScrollHeight = messagesContainer.value.scrollHeight;
+
+    const res = await api.get(`/ws/history/${roomId}?offset=${currentOffset}`);
+    const olderMessages = res.data;
+
+    if (olderMessages.length < 10) {
+      hasMoreHistory.value = false;
+    }
+
+    messages.value = [...olderMessages, ...messages.value];
+
+    nextTick(() => {
+      const newScrollHeight = messagesContainer.value.scrollHeight;
+      messagesContainer.value.scrollTop = newScrollHeight - oldScrollHeight;
+    });
+
+  } catch (e) {
+    console.error("Помилка завантаження історії", e);
+  } finally {
+    isLoadingHistory.value = false;
+  }
+};
 
 const sendMessage = () => {
   if (!messageInput.value.trim() || !socket.value) return
@@ -184,7 +272,7 @@ const scrollToBottom = () => {
           </div>
         </header>
 
-        <div class="messages-list" ref="messagesContainer">
+        <div class="messages-list" ref="messagesContainer" @scroll="handleScroll">
           <div
               v-for="(msg, index) in messages"
               :key="index"
@@ -192,7 +280,7 @@ const scrollToBottom = () => {
               :class="{ 'my-message-row': msg.is_self }"
           >
             <div class="bubble">
-              {{ typeof msg.message === 'object' && msg.message.text ? msg.message.text : msg.message }}
+              {{ msg.text }}
             </div>
           </div>
         </div>
