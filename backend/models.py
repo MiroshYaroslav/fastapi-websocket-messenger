@@ -11,18 +11,7 @@ class User(Base):
     age = Column(Integer)
     hashed_password = Column(String)
 
-    posts = relationship("Post", back_populates="author")
     messages = relationship("Message", back_populates="sender")
-
-class Post(Base):
-    __tablename__ = "posts"
-
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    comment = Column(String)
-    author_id = Column(Integer, ForeignKey("users.id"))
-
-    author = relationship("User", back_populates="posts")
 
 class Message(Base):
     __tablename__ = "messages"
