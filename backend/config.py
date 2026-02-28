@@ -1,4 +1,3 @@
-# config.py
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,6 +17,8 @@ class Settings(BaseSettings):
     DB_USER: str
     DB_PASSWORD: str
     DB_NAME: str
+
+    REDIS_HOST: str = "localhost"
 
     model_config = SettingsConfigDict(
         env_file=ENV_FILE_PATH,
