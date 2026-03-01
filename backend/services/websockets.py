@@ -1,12 +1,14 @@
 import json
+from typing import Dict
+
 import redis.asyncio as redis
 from fastapi import WebSocket
-from typing import Dict
+
 from config import settings
 
 
 class ConnectionManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_connections: Dict[int, Dict[int, WebSocket]] = {}
         self.global_connections: Dict[int, WebSocket] = {}
 
@@ -32,7 +34,7 @@ class ConnectionManager:
             "event_type": "room_message",
             "room_id": room_id,
             "sender_id": sender_id,
-            "message": message
+            "message": message,
         }
         await self.redis_client.publish("chat_channel", json.dumps(payload))
 
@@ -56,18 +58,14 @@ class ConnectionManager:
             await self.broadcast_presence(user_id, False)
 
     async def broadcast_presence(self, user_id: int, is_online: bool):
-        payload = {
-            "event_type": "presence",
-            "user_id": user_id,
-            "is_online": is_online
-        }
+        payload = {"event_type": "presence", "user_id": user_id, "is_online": is_online}
         await self.redis_client.publish("chat_channel", json.dumps(payload))
 
     async def broadcast_global(self, recipient_id: int, notification: dict):
         payload = {
             "event_type": "global_notification",
             "recipient_id": recipient_id,
-            "notification": notification
+            "notification": notification,
         }
         await self.redis_client.publish("chat_channel", json.dumps(payload))
 
@@ -92,7 +90,7 @@ class ConnectionManager:
                                 if connection:
                                     message_with_class = {
                                         "text": text,
-                                        "is_self": sender_id == user_id
+                                        "is_self": sender_id == user_id,
                                     }
                                     try:
                                         await connection.send_json(message_with_class)
@@ -116,7 +114,7 @@ class ConnectionManager:
                         presence_data = {
                             "type": "presence_update",
                             "user_id": data["user_id"],
-                            "is_online": data["is_online"]
+                            "is_online": data["is_online"],
                         }
                         for uid, ws in list(self.global_connections.items()):
                             try:
@@ -127,5 +125,6 @@ class ConnectionManager:
 
         except Exception as e:
             print(f"ERROR REDIS LISTENER: {e}")
+
 
 manager = ConnectionManager()

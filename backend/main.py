@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import auth, users, chat
+from routers import auth, chat, users
 from services.websockets import manager
 
 
@@ -15,6 +15,8 @@ async def lifespan(app: FastAPI):
     listener_task.cancel()
     await manager.pubsub.close()
     await manager.redis_client.close()
+
+
 app = FastAPI(lifespan=lifespan)
 
 origins = [
@@ -23,7 +25,7 @@ origins = [
     "http://127.0.0.1",
     "http://127.0.0.1:80",
     "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
 ]
 
 app.add_middleware(

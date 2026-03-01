@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import User
-from schemas import UserResponse, CreateUser
-from security import get_password_hash, get_current_user
+from schemas import CreateUser, UserResponse
+from security import get_current_user, get_password_hash
 
 router = APIRouter(prefix="/users", tags=["Users"])
+
 
 @router.post("/", response_model=UserResponse)
 async def add_user(user: CreateUser, db: AsyncSession = Depends(get_db)):
@@ -21,11 +22,15 @@ async def add_user(user: CreateUser, db: AsyncSession = Depends(get_db)):
     await db.refresh(db_user)
     return db_user
 
+
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     return current_user
 
+
 @router.get("/all", response_model=List[UserResponse])
-async def read_users_all(current_user: Annotated[User, Depends(get_current_user)], db: AsyncSession = Depends(get_db)):
+async def read_users_all(
+    current_user: Annotated[User, Depends(get_current_user)], db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(select(User))
     return result.scalars().all()

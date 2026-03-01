@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -21,9 +22,7 @@ class Settings(BaseSettings):
     REDIS_HOST: str = "localhost"
 
     model_config = SettingsConfigDict(
-        env_file=ENV_FILE_PATH,
-        env_file_encoding="utf-8",
-        extra="ignore"
+        env_file=ENV_FILE_PATH, env_file_encoding="utf-8", extra="ignore"
     )
 
 

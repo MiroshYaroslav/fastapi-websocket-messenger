@@ -1,7 +1,7 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
-from config import settings
 
+from config import settings
 
 DATABASE_URL = (
     f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}@"
@@ -17,7 +17,7 @@ SessionLocal = async_sessionmaker(
 )
 Base = declarative_base()
 
+
 async def get_db():
     async with SessionLocal() as db:
         yield db
-
