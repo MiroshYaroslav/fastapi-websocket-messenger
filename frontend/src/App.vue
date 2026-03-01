@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import api from "@/api/axios.js";
 import AuthComponent from './components/AuthComponent.vue'
-import ChatDashboard from './components/ChatDashboard.vue' // <--- Імпорт
+import ChatDashboard from './components/ChatDashboard.vue'
 
 const isAuth = ref(false)
 
@@ -40,7 +40,6 @@ onMounted(() => {
 </template>
 
 <style>
-/* ... (твій старий стиль body і header) ... */
 
 body {
   margin: 0;
@@ -51,7 +50,7 @@ body {
 }
 
 #app-container {
-  max-width: 1400px; /* Трохи розширимо контейнер для чату */
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
 }
