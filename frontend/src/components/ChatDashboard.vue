@@ -35,7 +35,7 @@ onMounted(async () => {
         unreadCounts.value[u.id] = unreadRes.data[u.id] || 0
       })
     } catch (unreadErr) {
-      console.warn("Не вдалося завантажити лічильники", unreadErr)
+      console.warn("Failed to load unread counters", unreadErr)
       users.value.forEach(u => { unreadCounts.value[u.id] = 0 })
     }
 
@@ -46,7 +46,7 @@ onMounted(async () => {
         onlineUsers.value[id] = true
       })
     } catch (e) {
-      console.warn("Не вдалося завантажити початковий онлайн-статус", e)
+      console.warn("Failed to load initial online status", e)
     }
 
     connectGlobalWebSocket()
@@ -83,7 +83,7 @@ const selectUser = async (user) => {
   try {
     await api.post(`/ws/mark-read/${user.id}`)
   } catch (e) {
-    console.error("Помилка при оновленні статусу прочитання", e)
+    console.error("Error updating read status", e)
   }
 
   hasMoreHistory.value = true
@@ -119,7 +119,7 @@ const connectGlobalWebSocket = () => {
   }
 
   globalSocket.value.onclose = (e) => {
-    console.warn("Глобальний сокет закрито. Спроба відновлення через 3 сек...")
+    console.warn("Global socket closed. Attempting to reconnect in 3 sec...")
     clearTimeout(reconnectGlobalTimeout)
     reconnectGlobalTimeout = setTimeout(() => {
       if (currentUser.value) {
@@ -147,7 +147,7 @@ const connectWebSocket = () => {
   }
 
   socket.value.onclose = (e) => {
-    console.warn("Сокет чату закрито. Спроба відновлення через 3 сек...")
+    console.warn("Chat socket closed. Attempting to reconnect in 3 sec...")
     clearTimeout(reconnectChatTimeout)
     reconnectChatTimeout = setTimeout(() => {
       if (selectedUser.value) {
@@ -188,7 +188,7 @@ const loadOlderMessages = async () => {
     });
 
   } catch (e) {
-    console.error("Помилка завантаження історії", e);
+    console.error("Error loading chat history", e);
   } finally {
     isLoadingHistory.value = false;
   }
@@ -216,10 +216,10 @@ const scrollToBottom = () => {
 
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h3>Чати</h3>
+        <h3>Chats</h3>
         <div class="my-profile" v-if="currentUser">
           <div class="avatar-small">{{ currentUser.name[0] }}</div>
-          <span>{{ currentUser.name }} (Ви)</span>
+          <span>{{ currentUser.name }} (You)</span>
         </div>
       </div>
 
@@ -236,7 +236,7 @@ const scrollToBottom = () => {
             <span class="user-name">{{ user.name }}</span>
             <span class="user-status" :class="{ 'text-online': onlineUsers[user.id] }">
               <span class="status-dot" :class="{ 'online': onlineUsers[user.id] }"></span>
-              {{ onlineUsers[user.id] ? 'Онлайн' : 'Офлайн' }}
+              {{ onlineUsers[user.id] ? 'Online' : 'Offline' }}
             </span>
           </div>
           <div class="unread-badge" v-if="unreadCounts[user.id] > 0">
@@ -245,12 +245,12 @@ const scrollToBottom = () => {
         </div>
 
         <div v-if="users.length === 0" class="no-users">
-          Немає інших користувачів :(
+          No other users available :(
         </div>
       </div>
 
       <div class="sidebar-footer">
-        <button @click="$emit('logout')" class="logout-btn-small">Вихід</button>
+        <button @click="$emit('logout')" class="logout-btn-small">Logout</button>
       </div>
     </aside>
 
@@ -258,7 +258,7 @@ const scrollToBottom = () => {
 
       <div v-if="!selectedUser" class="empty-state">
         <div class="placeholder-icon">💬</div>
-        <h3>Оберіть, кому написати</h3>
+        <h3>Select a user to start chatting</h3>
       </div>
 
       <div v-else class="chat-window">
@@ -267,7 +267,7 @@ const scrollToBottom = () => {
           <div class="header-info">
             <span class="header-name">{{ selectedUser.name }}</span>
             <span class="header-details" :class="{ 'text-online': onlineUsers[selectedUser.id] }">
-              {{ onlineUsers[selectedUser.id] ? 'Онлайн' : 'Офлайн' }}
+              {{ onlineUsers[selectedUser.id] ? 'Online' : 'Offline' }}
             </span>
           </div>
         </header>
@@ -290,7 +290,7 @@ const scrollToBottom = () => {
               v-model="messageInput"
               @keyup.enter="sendMessage"
               type="text"
-              placeholder="Написати повідомлення..."
+              placeholder="Type a message..."
           />
           <button @click="sendMessage" class="send-btn">
             ➤
