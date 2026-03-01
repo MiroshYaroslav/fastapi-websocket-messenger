@@ -46,11 +46,11 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error(error);
     if (error.response && error.response.status === 401) {
-      errorMessage.value = "Невірне ім'я або пароль";
+      errorMessage.value = "Invalid username or password";
     } else if (isRegisterMode.value) {
-      errorMessage.value = "Помилка реєстрації. Можливо, ім'я зайняте.";
+      errorMessage.value = "Registration failed. The username might be taken.";
     } else {
-      errorMessage.value = "Сталася помилка сервера.";
+      errorMessage.value = "A server error occurred.";
     }
   } finally {
     isLoading.value = false;
@@ -65,41 +65,41 @@ const handleSubmit = async () => {
         <button
             :class="{ active: !isRegisterMode }"
             @click="isRegisterMode = false">
-          Вхід
+          Login
         </button>
         <button
             :class="{ active: isRegisterMode }"
             @click="isRegisterMode = true">
-          Реєстрація
+          Register
         </button>
       </div>
 
-      <h2>{{ isRegisterMode ? 'Створити акаунт' : 'З поверненням!' }}</h2>
+      <h2>{{ isRegisterMode ? 'Create an account' : 'Welcome back!' }}</h2>
 
       <form @submit.prevent="handleSubmit">
 
         <div class="input-group">
-          <label>Ім'я</label>
+          <label>Username</label>
           <input
               type="text"
               v-model="form.name"
-              placeholder="Введіть ваше ім'я"
+              placeholder="Enter your username"
               required
           />
         </div>
 
         <div class="input-group" v-if="isRegisterMode">
-          <label>Вік</label>
+          <label>Age</label>
           <input
               type="number"
               v-model="form.age"
-              placeholder="Скільки вам років?"
+              placeholder="How old are you?"
               required
           />
         </div>
 
         <div class="input-group">
-          <label>Пароль</label>
+          <label>Password</label>
           <input
               type="password"
               v-model="form.password"
@@ -111,7 +111,7 @@ const handleSubmit = async () => {
         <p v-if="errorMessage" class="error-msg">{{ errorMessage }}</p>
 
         <button type="submit" class="submit-btn" :disabled="isLoading">
-          {{ isLoading ? 'Завантаження...' : (isRegisterMode ? 'Зареєструватися' : 'Увійти') }}
+          {{ isLoading ? 'Loading...' : (isRegisterMode ? 'Sign Up' : 'Sign In') }}
         </button>
       </form>
     </div>
