@@ -6,7 +6,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "051404"
+      POSTGRES_PASSWORD: 
       POSTGRES_DB: FastAPIProject
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -47,9 +47,9 @@ services:
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASSWORD: "051404"
+      DB_PASSWORD: 
       DB_NAME: FastAPIProject
-      SECRET_KEY: "74f0cc2b8e713d015753a08c65cdf3d94e313406dc4c32b94402ec4f3cfae372"
+      SECRET_KEY: 
       ALGORITHM: "HS256"
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
 
